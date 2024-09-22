@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriverConfig, ApolloDriver } from '@nestjs/apollo';
@@ -7,6 +6,9 @@ import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin
 import { ProductsModule } from './products/products.module';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
+import { CoreModule } from './core/core.module';
+import { EmailScalar } from './core/types/email.scalar';
+import { AppResolver } from './app.resolver';
 
 @Module({
   imports: [
@@ -16,11 +18,13 @@ import { UsersModule } from './users/users.module';
       autoSchemaFile: true,
       playground: false,
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
+      resolvers: { Email: EmailScalar },
     }),
     ProductsModule,
     UsersModule,
+    CoreModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [AppService, AppResolver],
 })
 export class AppModule {}

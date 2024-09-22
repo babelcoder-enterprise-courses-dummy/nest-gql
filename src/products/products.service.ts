@@ -10,13 +10,16 @@ export class ProductsService {
     for (let i = 1; i <= 100; i++) {
       this.products.push({
         id: i,
-        name: `Product Name #1`,
-        desc: `Product Desc #1`,
+        name: `Product Name #${i}`,
+        desc: `Product Desc #${i}`,
       });
     }
   }
 
-  findAll({ page, limit }: GetProductsArgs): Product[] {
+  findAll(params?: GetProductsArgs): Product[] {
+    if (!params) return this.products;
+
+    const { page, limit } = params;
     const startIndex = (page - 1) * limit;
 
     return this.products.slice(startIndex, startIndex + limit);
