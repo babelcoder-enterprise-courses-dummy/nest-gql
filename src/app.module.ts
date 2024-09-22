@@ -19,6 +19,7 @@ import { AppResolver } from './app.resolver';
       playground: false,
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
       resolvers: { Email: EmailScalar },
+      fieldResolverEnhancers: ['interceptors'],
     }),
     ProductsModule,
     UsersModule,

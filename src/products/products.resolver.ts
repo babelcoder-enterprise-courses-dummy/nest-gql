@@ -12,12 +12,13 @@ export class ProductsResolver {
 
   @Query(() => [Product], { name: 'products' })
   getProducts(@Args() args: GetProductsArgs) {
-    return this.productsService.findAll(args);
+    return this.productsService.findAll(args).map((p) => new Product(p));
   }
 
   @Query(() => Product, { name: 'product' })
   getProduct(@Args('id', { type: () => Int }) id: number) {
-    return this.productsService.findById(id);
+    const product = this.productsService.findById(id);
+    return new Product(product);
   }
 
   @Mutation(() => Product)
