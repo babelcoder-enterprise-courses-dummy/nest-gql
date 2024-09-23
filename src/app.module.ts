@@ -19,6 +19,20 @@ import { CategoriesModule } from './categories/categories.module';
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
       resolvers: { Email: EmailScalar },
       fieldResolverEnhancers: ['interceptors'],
+      formatError: (error) => {
+        const originalError = error.extensions?.originalError as Error;
+
+        if (!originalError) {
+          return {
+            message: error.message,
+            code: error.extensions?.code,
+          };
+        }
+        return {
+          message: originalError.message,
+          code: error.extensions?.code,
+        };
+      },
     }),
     ProductsModule,
     UsersModule,
