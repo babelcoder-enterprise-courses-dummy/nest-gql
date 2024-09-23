@@ -1,49 +1,90 @@
 import { Injectable } from '@nestjs/common';
-import { Product } from './product.model';
+import { omit } from 'lodash';
+
+import { PrismaService } from 'src/core/services/prisma.service';
+import { slugify } from 'src/core/utils/slugify';
 import { GetProductsArgs } from './dto/get-products.args';
 import { CreateProductInput } from './dto/create-product.input';
 import { UpdateProductInput } from './dto/update-product.input';
 
 @Injectable()
 export class ProductsService {
-  products: Product[] = [];
+  constructor(private prisma: PrismaService) {}
 
-  findAll(params?: GetProductsArgs): Product[] {
-    if (!params) return this.products;
-
-    const { page, limit } = params;
-    const startIndex = (page - 1) * limit;
-
-    return this.products.slice(startIndex, startIndex + limit);
+  findById(productId: number) {
+    return this.prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        categories: true,
+      },
+    });
   }
 
-  findById(id: number) {
-    return this.products.find((p) => p.id === id);
+  findBySlug(slug: string) {
+    return this.prisma.product.findUnique({
+      where: { slug },
+      include: {
+        categories: true,
+      },
+    });
   }
 
-  create(product: CreateProductInput) {
-    const createdProduct = {
-      id: this.products.length + 1,
-      ...product,
+  findByIdOrSlug(idOrSlug: string) {
+    if (isNaN(+idOrSlug)) return this.findBySlug(idOrSlug);
+    return this.findById(+idOrSlug);
+  }
+
+  async findAll(options: GetProductsArgs) {
+    const page = options.page ?? 1;
+    const limit = options.limit ?? 10;
+    const totalCount = await this.prisma.product.count();
+    const products = await this.prisma.product.findMany({
+      include: {
+        categories: true,
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return {
+      meta: {
+        page,
+        limit,
+        previousPage: page === 1 ? undefined : page - 1,
+        nextPage: Math.ceil(totalCount / limit) > page ? page + 1 : undefined,
+        totalCount,
+      },
+      items: products,
     };
-
-    this.products.push(createdProduct);
-
-    return createdProduct;
   }
 
-  update(product: UpdateProductInput) {
-    const existingProduct = this.products.find((p) => p.id === product.id);
-
-    if (product.name) existingProduct.name = product.name;
-    if (product.desc) existingProduct.desc = product.desc;
-
-    return existingProduct;
+  async create(form: CreateProductInput) {
+    return await this.prisma.product.create({
+      data: {
+        ...omit(form, 'categoryIds'),
+        slug: form.name ? slugify(form.name) : undefined,
+        categories: { connect: form.categoryIds.map((id) => ({ id })) },
+      },
+      include: { categories: true },
+    });
   }
 
-  remove(id: number) {
-    const existingProductIndex = this.products.findIndex((p) => p.id === id);
+  async update(form: UpdateProductInput) {
+    return await this.prisma.product.update({
+      where: { id: form.id },
+      data: {
+        ...omit(form, ['id', 'categoryIds']),
+        slug: form.name ? slugify(form.name) : undefined,
+        categories: form.categoryIds
+          ? { connect: form.categoryIds.map((id) => ({ id })) }
+          : undefined,
+      },
+      include: { categories: true },
+    });
+  }
 
-    this.products.splice(existingProductIndex, 1);
+  async destroy(productId: number) {
+    return await this.prisma.product.delete({ where: { id: productId } });
   }
 }

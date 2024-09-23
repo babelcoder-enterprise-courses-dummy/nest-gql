@@ -1,24 +1,24 @@
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Product } from './models/product.model';
 import { ProductsService } from './products.service';
-import { Product } from './product.model';
-import { GetProductsArgs } from './dto/get-products.args';
 import { CreateProductInput } from './dto/create-product.input';
 import { UpdateProductInput } from './dto/update-product.input';
 import { VoidResolver } from 'graphql-scalars';
+import { GetProductsArgs } from './dto/get-products.args';
+import { ProductList } from './models/product-list.model';
 
 @Resolver(() => Product)
 export class ProductsResolver {
   constructor(private readonly productsService: ProductsService) {}
 
-  @Query(() => [Product], { name: 'products' })
+  @Query(() => ProductList, { name: 'products' })
   getProducts(@Args() args: GetProductsArgs) {
-    return this.productsService.findAll(args).map((p) => new Product(p));
+    return this.productsService.findAll(args);
   }
 
   @Query(() => Product, { name: 'product' })
   getProduct(@Args('id', { type: () => Int }) id: number) {
-    const product = this.productsService.findById(id);
-    return new Product(product);
+    return this.productsService.findById(id);
   }
 
   @Mutation(() => Product)
@@ -32,8 +32,8 @@ export class ProductsResolver {
   }
 
   @Mutation(() => VoidResolver)
-  removeProduct(@Args('id', { type: () => Int }) id: number) {
-    this.productsService.remove(id);
+  async removeProduct(@Args('id', { type: () => Int }) id: number) {
+    await this.productsService.destroy(id);
     return VoidResolver;
   }
 }

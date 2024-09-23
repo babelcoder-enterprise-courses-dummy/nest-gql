@@ -1,0 +1,10 @@
+services:
+  db:
+    image: 'postgres:16.3-alpine3.20'
+    ports:
+      - 9111:5432
+    environment:
+      POSTGRES_USER: myapp
+      POSTGRES_PASSWORD: mypassword
+    volumes:
+      - ./data/pg:/var/lib/postgresql/data
