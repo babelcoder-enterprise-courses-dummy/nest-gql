@@ -14,18 +14,12 @@ export class ProductsService {
   findById(productId: number) {
     return this.prisma.product.findUnique({
       where: { id: productId },
-      include: {
-        categories: true,
-      },
     });
   }
 
   findBySlug(slug: string) {
     return this.prisma.product.findUnique({
       where: { slug },
-      include: {
-        categories: true,
-      },
     });
   }
 
@@ -39,9 +33,6 @@ export class ProductsService {
     const limit = options.limit ?? 10;
     const totalCount = await this.prisma.product.count();
     const products = await this.prisma.product.findMany({
-      include: {
-        categories: true,
-      },
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { createdAt: 'desc' },
@@ -66,7 +57,6 @@ export class ProductsService {
         slug: form.name ? slugify(form.name) : undefined,
         categories: { connect: form.categoryIds.map((id) => ({ id })) },
       },
-      include: { categories: true },
     });
   }
 
@@ -80,7 +70,6 @@ export class ProductsService {
           ? { connect: form.categoryIds.map((id) => ({ id })) }
           : undefined,
       },
-      include: { categories: true },
     });
   }
 

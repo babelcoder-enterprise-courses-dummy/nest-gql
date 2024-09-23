@@ -18,6 +18,39 @@ export class CategoriesService {
     return this.prisma.category.findMany();
   }
 
+  findAllByProductId(productId: number) {
+    return this.prisma.category.findMany({
+      where: {
+        products: { every: { id: productId } },
+      },
+    });
+  }
+
+  findAllByProductIds(productIds: number[]) {
+    return this.prisma.category.findMany({
+      where: {
+        products: {
+          some: {
+            id: { in: productIds },
+          },
+        },
+      },
+      include: {
+        products: { select: { id: true } },
+      },
+    });
+  }
+
+  async findAllByProductIdsWithLoader(productIds: number[]) {
+    const categories = await this.findAllByProductIds(productIds);
+
+    return productIds.map((productId) => {
+      return categories.filter((c) =>
+        c.products.map((p) => p.id).includes(productId),
+      );
+    });
+  }
+
   async create(form: CreateCategoryInput) {
     return await this.prisma.category.create({
       data: {
