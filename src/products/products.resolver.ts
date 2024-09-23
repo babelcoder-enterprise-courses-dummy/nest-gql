@@ -15,16 +15,12 @@ import { UpdateProductInput } from './dto/update-product.input';
 import { VoidResolver } from 'graphql-scalars';
 import { GetProductsArgs } from './dto/get-products.args';
 import { ProductList } from './models/product-list.model';
-import { CategoriesService } from 'src/categories/categories.service';
 import { Category } from 'src/categories/models/category.model';
 import { DataLoaders } from 'src/data-loaders/data-loaders.model';
 
 @Resolver(() => Product)
 export class ProductsResolver {
-  constructor(
-    private readonly productsService: ProductsService,
-    private readonly categoriesService: CategoriesService,
-  ) {}
+  constructor(private readonly productsService: ProductsService) {}
 
   @Query(() => ProductList, { name: 'products' })
   getProducts(@Args() args: GetProductsArgs) {
